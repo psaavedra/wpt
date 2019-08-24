@@ -4,61 +4,43 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <!--
- sms_provider.js is a testing framework that enables engines to test the sms
- receiver API by intercepting the connection between the browser and the
+ sms_mocks.js is a testing framework that enables Chromium-based browser to test
+ the sms receiver API by intercepting the connection between the browser and the
  underlying operating system and mock its behavior.
 
  Usage:
 
- 1) Include <script src="./sms_provider.js"></script> in your test.
- 2) Set expectations
-  await expect(receive).andReturn((timeout) => {
-    // mock behavior
-  })
+ 1) Include <script src="./sms_helper.js"></script> in your test.
+ 2) Set mocked return values by using the setValues callback using
+    sms_receiver_test
+    Ex. setValues([{status: Status.kSuccess, message: "hello"}]);
+
  3) Call navigator.sms.receive()
  4) Verify results
-
- The mocking API is browser agnostic and is designed such that other engines
- could implement it too.
 
  Here are the symbols that are exposed to tests that need to be implemented
  per engine:
 
- - function receive(): the main/only function that can be mocked.
- - function expect(): the main/only function that enables us to mock it.
  - enum State {kSuccess, kTimeout}: allows you to mock success/failures.
 
   -->
-<script src="./sms_provider.js"></script>
+<script src="./resources/helper.js"></script>
 <script>
 'use strict';
 
-promise_test(async t => {
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kSuccess,
-        message: "hello",
-      });
-  });
+sms_receiver_test(async (t, setValues) => {
+  setValues([{status: Status.kSuccess, message: "hello"}]);
 
   let sms = await navigator.sms.receive();
 
   assert_equals(sms.content, "hello");
 }, 'Basic usage');
 
-promise_test(async t => {
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kSuccess,
-        message: "hello1",
-      });
-  });
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kSuccess,
-        message: "hello2",
-      });
-  });
+sms_receiver_test(async (t, setValues) => {
+  setValues([
+    {status: Status.kSuccess, message: "hello1"},
+    {status: Status.kSuccess, message: "hello2"},
+  ]);
 
   let sms1 = navigator.sms.receive();
   let sms2 = navigator.sms.receive();
@@ -70,18 +52,11 @@ promise_test(async t => {
   assert_equals(msg2.content, "hello2");
 }, 'Handle multiple requests in different order.');
 
-promise_test(async t => {
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kTimeout,
-      });
-  });
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kSuccess,
-        message: "success",
-      });
-  });
+sms_receiver_test(async (t, setValues) => {
+  setValues([
+    {status: Status.kTimeout},
+    {status: Status.kSuccess, message: "success"},
+  ]);
 
   let timeout_sms = navigator.sms.receive();
   let successful_sms = navigator.sms.receive();
@@ -98,12 +73,8 @@ promise_test(async t => {
   }
 }, 'Handle multiple requests with success and error.');
 
-promise_test(async t => {
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kTimeout,
-      });
-  });
+sms_receiver_test(async (t, setValues) => {
+  setValues([{status: Status.kTimeout}]);
 
   try {
     await navigator.sms.receive();
@@ -154,24 +125,15 @@ promise_test(async t => {
   }
 }, 'Should throw error with invalid timeout (NaN)');
 
-promise_test(async t => {
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kSuccess,
-        message: "hello",
-      });
-  });
+sms_receiver_test(async (t, setValues) => {
+  setValues([{status: Status.kSuccess, message: "hello"}]);
 
   let sms = await navigator.sms.receive({timeout: undefined});
   assert_equals(sms.content, "hello");
 }, 'Should use default value for timeout (undefined)');
 
-promise_test(async t => {
-  await expect(receive).andReturn((timeout) => {
-      return Promise.resolve({
-        status: Status.kCancelled,
-      });
-  });
+sms_receiver_test(async (t, setValues) => {
+  setValues([{status: Status.kCancelled}]);
 
   try {
     await navigator.sms.receive();
