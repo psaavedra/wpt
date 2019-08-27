@@ -14,7 +14,7 @@ tasks:
                 event.ref == "refs/heads/master": [{name: firefox, channel: nightly}, {name: chrome, channel: dev}],
                 event.ref == "refs/heads/epochs/daily": [{name: firefox, channel: stable}, {name: chrome, channel: stable}],
                 event.ref == "refs/heads/epochs/weekly": [{name: firefox, channel: beta}, {name: chrome, channel: beta}],
-                event.ref == "refs/heads/test-taskcluster-epiphany": [{name: epiphany, channel: beta}]
+                event.ref == "refs/heads/test-taskcluster-epiphany": [{name: epiphany, channel: beta}, {name: firefox, channel: beta}, {name: chrome, channel: beta}]
                 }
           each(browser):
             $map:
@@ -65,49 +65,57 @@ tasks:
                 owner: ${event.pusher.email}
                 source: ${event.repository.url}
               payload:
-                image:
-                  $if: browser.name == 'epiphany'
-                  then:
-                    cl0p3z/web-platform-tests:debian-epiphany20190827
-                  else:
-                    harjgam/web-platform-tests:0.32
-                maxRunTime: 7200
-                artifacts:
-                  public/results:
-                    path: /home/test/artifacts
-                    type: directory
-                env:
-                    TASK_EVENT: "${event_str}"
-                command:
-                  - /bin/bash
-                  - --login
-                  - -c
-                  - set -ex;
-                    echo "wpt-${browser.name}-${browser.channel}-${chunk[0]}-${chunk[1]}";
-                    ~/start.sh
-                      ${event.repository.url}
-                      ${event.ref};
-                    cd ~/web-platform-tests;
-                    ./tools/ci/run_tc.py
-                      --checkout=${event.after}
-                      --oom-killer
-                      --hosts
-                      --browser=${browser.name}
-                      --channel=${browser.channel}
-                      --xvfb
-                      run-all
-                      ./tools/ci/taskcluster-run.py
-                        ${browser.name}
-                        --
-                        --webdriver-binary=/usr/bin/WebKitWebDriver
-                        --webdriver-arg=--host=127.0.0.1
+                $let:
+                  extraArgs:
+                    $if: browser.name == 'epiphany'
+                    then:
+                      --webdriver-binary=/usr/bin/WebKitWebDriver
+                      --webdriver-arg=--host=127.0.0.1
+                    else:
+                      ''
+                in:
+                  image:
+                    $if: browser.name == 'epiphany'
+                    then:
+                      cl0p3z/web-platform-tests:debian-epiphany20190827
+                    else:
+                      harjgam/web-platform-tests:0.32
+                  maxRunTime: 7200
+                  artifacts:
+                    public/results:
+                      path: /home/test/artifacts
+                      type: directory
+                  env:
+                      TASK_EVENT: "${event_str}"
+                  command:
+                    - /bin/bash
+                    - --login
+                    - -c
+                    - set -ex;
+                      echo "wpt-${browser.name}-${browser.channel}-${chunk[0]}-${chunk[1]}";
+                      ~/start.sh
+                        ${event.repository.url}
+                        ${event.ref};
+                      cd ~/web-platform-tests;
+                      ./tools/ci/run_tc.py
+                        --checkout=${event.after}
+                        --oom-killer
+                        --hosts
+                        --browser=${browser.name}
                         --channel=${browser.channel}
-                        --log-wptreport=../artifacts/wpt_report.json
-                        --log-wptscreenshot=../artifacts/wpt_screenshot.txt
-                        --no-fail-on-unexpected
-                        --test-type=${chunk[0]}
-                        --this-chunk=${chunk[1]}
-                        --total-chunks=${chunk[2]};
+                        --xvfb
+                        run-all
+                        ./tools/ci/taskcluster-run.py
+                          ${browser.name}
+                          --
+                          --channel=${browser.channel}
+                          --log-wptreport=../artifacts/wpt_report.json
+                          --log-wptscreenshot=../artifacts/wpt_screenshot.txt
+                          --no-fail-on-unexpected
+                          --test-type=${chunk[0]}
+                          --this-chunk=${chunk[1]}
+                          --total-chunks=${chunk[2]}
+                          ${extraArgs}
       - $if: tasks_for == "github-pull-request"
         # PR tasks that run the tests in various configurations
         then:
