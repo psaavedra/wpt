@@ -72,6 +72,7 @@ tasks:
                     then:
                       --webdriver-binary=/usr/bin/WebKitWebDriver
                       --webdriver-arg=--host=127.0.0.1
+                      --exclude /printing/print-microtask-after-navigate.html
                     else:
                       ''
                 in:
@@ -310,6 +311,7 @@ tasks:
           conditions:
             pull-request
         each(operation):
+          #
           # Note: jsone doesn't short-circuit evaluation so all parts of the conditional are evaluated
           # Accessing properties using the [] notation allows them to evaluate as null in case they're undefined
           # TODO: Allow running pushes on branches other than master
