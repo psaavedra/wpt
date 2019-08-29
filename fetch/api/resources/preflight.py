@@ -25,6 +25,9 @@ def main(request, response):
         if not "Access-Control-Request-Method" in request.headers:
             response.set_error(400, "No Access-Control-Request-Method header")
             return "ERROR: No access-control-request-method in preflight!"
+        if not "Accept" in request.headers:
+            response.set_error(400, "No Accept header")
+            return "ERROR: No accept in preflight!"
 
         if "control_request_headers" in request.GET:
             stashed_data['control_request_headers'] = request.headers.get("Access-Control-Request-Headers", None)
