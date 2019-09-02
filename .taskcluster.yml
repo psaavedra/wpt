@@ -72,7 +72,6 @@ tasks:
                     then:
                       --webdriver-binary=/usr/bin/WebKitWebDriver
                       --webdriver-arg=--host=127.0.0.1
-                      --exclude /printing/print-microtask-after-navigate.html
                     else:
                       ''
                 in:
