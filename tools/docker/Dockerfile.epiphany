@@ -35,6 +35,10 @@ RUN apt-get install -t experimental -y \
     epiphany-browser=3.32.1.2-2 \
     webkit2gtk-driver
 
+RUN wget https://wk-contrib.igalia.com/debian/tmp/libjavascriptcoregtk-4.0-18_2.25.4-1.1_amd64.deb && dpkg -i libjavascriptcoregtk-4.0-18_2.25.4-1.1_amd64.deb
+RUN wget https://wk-contrib.igalia.com/debian/tmp/libwebkit2gtk-4.0-37_2.25.4-1.1_amd64.deb        && dpkg -i libwebkit2gtk-4.0-37_2.25.4-1.1_amd64.deb
+RUN wget https://wk-contrib.igalia.com/debian/tmp/webkit2gtk-driver_2.25.4-1.1_amd64.deb           && dpkg -i webkit2gtk-driver_2.25.4-1.1_amd64.deb
+
 # Set the timezone
 ENV TZ "UTC"
 RUN echo "${TZ}" > /etc/timezone \
