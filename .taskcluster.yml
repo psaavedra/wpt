@@ -78,7 +78,7 @@ tasks:
                   image:
                     $if: browser.name == 'epiphany'
                     then:
-                      cl0p3z/web-platform-tests:debian-epiphany20190827
+                      psaavedra/debian-epiphany20190903
                     else:
                       harjgam/web-platform-tests:0.32
                   maxRunTime: 7200
