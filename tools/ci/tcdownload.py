@@ -67,7 +67,7 @@ def run(*args, **kwargs):
 
     if not taskgroups:
         logger.error("No complete TaskCluster runs found for ref %s" % kwargs["ref"])
-        return
+        return 2
 
     results = []
     screenshoots = 0
