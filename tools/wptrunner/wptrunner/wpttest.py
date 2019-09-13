@@ -522,7 +522,7 @@ class WdspecTest(Test):
     subtest_result_cls = WdspecSubtestResult
     test_type = "wdspec"
 
-    default_timeout = 25
+    default_timeout = 180
     long_timeout = 180  # 3 minutes
 
 
