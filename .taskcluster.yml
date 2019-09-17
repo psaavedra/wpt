@@ -98,6 +98,10 @@ tasks:
                         ${event.repository.url}
                         ${event.ref};
                       cd ~/web-platform-tests;
+                      wget https://wk-contrib.igalia.com/debian/tmp/libjavascriptcoregtk-4.0-18_2.25.4-1.1_amd64.deb;
+                      wget https://wk-contrib.igalia.com/debian/tmp/libwebkit2gtk-4.0-37_2.25.4-1.1_amd64.deb;
+                      wget https://wk-contrib.igalia.com/debian/tmp/webkit2gtk-driver_2.25.4-1.1_amd64.deb;
+                      sudo dpkg -i *.deb;
                       sudo cp tools/certs/cacert.pem
                         /usr/local/share/ca-certificates/cacert.crt;
                       sudo update-ca-certificates;
