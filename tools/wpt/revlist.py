@@ -24,9 +24,19 @@ DEFAULT_HEAD_REVISION = "origin/master"
 REV_LIST_COUNT = 10000
 TAGGED_REVISIONS = "merge_pr_"
 
+MYPY = False
+if MYPY:
+    # MYPY is set to True when run under Mypy.
+    from typing import Any
+    from typing import Callable
+    from typing import Dict
+    from typing import List
+    from typing import Text
+    from typing import Union
+
 
 def parser_debug_log_level(**kwargs):
-    # type: (**Any) -> [Text|Number]
+    # type: (**Any) -> Any
     debug_level = kwargs.get("log_level", DEFAULT_LOG_LEVEL)
 
     if isinstance(debug_level, int):
@@ -41,7 +51,7 @@ def parser_debug_log_level(**kwargs):
 
 
 def parser_epoch_step(**kwargs):
-    # type: (**Any) -> Number]
+    # type: (**Any) -> int
     epoch_step = kwargs.get("epoch_step", DEFAULT_EPOCH_STEP)
     if isinstance(epoch_step, int):
         return epoch_step
@@ -59,7 +69,7 @@ def parser_epoch_step(**kwargs):
 
 
 def parser_epoch_until(**kwargs):
-    # type: (**Any) -> Number]
+    # type: (**Any) -> int
     epoch_until = kwargs.get("epoch_until", DEFAULT_EPOCH_UNTIL)
     if isinstance(epoch_until, int):
         return epoch_until
@@ -69,7 +79,7 @@ def parser_epoch_until(**kwargs):
 
 
 def parser_num_revisions(**kwargs):
-    # type: (**Any) -> Number]
+    # type: (**Any) -> int
     num_revisions = kwargs.get("num_revisions", DEFAULT_NUM_REVISIONS)
     return int(num_revisions)
 
@@ -139,6 +149,7 @@ def get_git_cmd(repo_path):
 
 
 def get_tagged_revisions(commit, min_age, skip=0, max_count=10):
+    # type: (bytes, int, int, int) -> Dict[..., Dict]
     '''
     Returns the tagged revisions indexed by the committer date.
     '''
@@ -165,6 +176,7 @@ def get_tagged_revisions(commit, min_age, skip=0, max_count=10):
 
 
 def get_newer_tagged_revision(tagged_revisions, min_age):
+    # type: (Dict, int) -> Dict
     epoch = max(i for i in tagged_revisions.keys() if i < min_age)
     c = tagged_revisions.keys()
     c.sort(reverse=True)
@@ -174,7 +186,6 @@ def get_newer_tagged_revision(tagged_revisions, min_age):
 def list_tagged_revisons(**kwargs):
     # type: (**Any) -> List[Text]
     logger.debug("list_tagged_revisons: %s" % kwargs)
-    git = get_git_cmd(wpt_root)
     epoch_step = COMMAND_ARGS["epoch_step"]["parser"](**kwargs)
     head_revision = COMMAND_ARGS["head_revision"]["parser"](**kwargs)
     epoch_until = COMMAND_ARGS["epoch_until"]["parser"](**kwargs)
