@@ -11,18 +11,21 @@ wpt_root = os.path.abspath(os.path.join(here, os.pardir, os.pardir))
 
 logger = logging.getLogger()
 
+DEFAULT_EPOCH_STEP = 86400
+DEFAULT_EPOCH_THESHOLD = 600
+DEFAULT_EPOCH_UNTIL = calendar.timegm(time.gmtime())
+DEFAULT_HEAD_REVISION = "origin/master"
+DEFAULT_LOG_LEVEL = 30
+DEFAULT_NUM_REVISIONS = 1
+DEFAULT_VERBOSE = False
+
+REV_LIST_COUNT = 10000
+
+TAGGED_REVISIONS = "merge_pr_"
+
 WEEKLY_EPOCH_SIZE = 604800
 WEEKLY_EPOCH_OFFSET = -259200  # Monday, 29 December 1969 0:00:00
 
-DEFAULT_EPOCH_UNTIL = calendar.timegm(time.gmtime())
-DEFAULT_EPOCH_STEP = 86400
-DEFAULT_NUM_REVISIONS = 1
-DEFAULT_LOG_LEVEL = 30
-DEFAULT_VERBOSE = False
-DEFAULT_HEAD_REVISION = "origin/master"
-
-REV_LIST_COUNT = 10000
-TAGGED_REVISIONS = "merge_pr_"
 
 MYPY = False
 if MYPY:
@@ -93,6 +96,16 @@ COMMAND_ARGS = {
                 "'1570345200'.",
         "parser": parser_epoch_until
     },
+    "epoch_threshold": {
+        "name": "epoch-threshold",
+        "default": DEFAULT_EPOCH_THESHOLD,
+        "help": "Safety threshold respect now "
+                "(default: %s seconds)." % DEFAULT_EPOCH_THESHOLD,
+        "parser": lambda **kwargs: int(kwargs.get("epoch_threshold",
+                                                  DEFAULT_EPOCH_THESHOLD)),
+        "type": int
+    },
+
     "epoch_step": {
         "name": "epoch-step",
         "default": DEFAULT_EPOCH_STEP,
@@ -104,7 +117,7 @@ COMMAND_ARGS = {
     "head_revision": {
         "name": "head-revision",
         "default": DEFAULT_HEAD_REVISION,
-        "help": "Head revision (Default: %s)" % DEFAULT_HEAD_REVISION,
+        "help": "Head revision (default: %s)" % DEFAULT_HEAD_REVISION,
         "parser": lambda **kwargs: kwargs.get("head_revision",
                                               DEFAULT_HEAD_REVISION),
     },
@@ -185,13 +198,17 @@ def get_newer_tagged_revision(tagged_revisions, min_age):
 
 def list_tagged_revisons(**kwargs):
     # type: (**Any) -> List[Text]
+    head_revision = COMMAND_ARGS["head_revision"]["parser"](**kwargs)
     logger.debug("list_tagged_revisons: %s" % kwargs)
     epoch_step = COMMAND_ARGS["epoch_step"]["parser"](**kwargs)
-    head_revision = COMMAND_ARGS["head_revision"]["parser"](**kwargs)
+    epoch_threshold = COMMAND_ARGS["epoch_threshold"]["parser"](**kwargs)
     epoch_until = COMMAND_ARGS["epoch_until"]["parser"](**kwargs)
     num_revisions = COMMAND_ARGS["num_revisions"]["parser"](**kwargs)
     verbose = COMMAND_ARGS["verbose"]["parser"](**kwargs)
 
+    if epoch_until > DEFAULT_EPOCH_UNTIL - epoch_threshold:
+        epoch_until = DEFAULT_EPOCH_UNTIL - epoch_threshold
+        logger.debug("epoch-until adjusted to %s using the safety epoch-threshold value (%s)" % (epoch_until, epoch_threshold))  # noqa E501
     iterator = 0
     result = []
     previous_revision = None
@@ -266,6 +283,7 @@ def get_parser():
         else:
             parser.add_argument("--%s" % command_arg["name"],
                                 default=default_value,
+                                type=command_arg_type,
                                 help=command_arg["help"])
 
     return parser
